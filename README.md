@@ -1,6 +1,6 @@
 # Hi, I'm Manuel Gross
 
-## 💫 About Me:
+## About Me:
 I'm currently a student at HTL Leonding, Austria
 
 
