@@ -6,6 +6,7 @@ variant of a stats card and a language card) into the given output dir.
 Stdlib only, so the workflow needs no install step.
 """
 
+import datetime
 import json
 import os
 import sys
@@ -25,7 +26,10 @@ query($login: String!) {
     contributionsCollection {
       totalCommitContributions
       restrictedContributionsCount
-      contributionCalendar { totalContributions }
+      contributionCalendar {
+        totalContributions
+        weeks { contributionDays { date contributionCount } }
+      }
     }
     pullRequests { totalCount }
     issues { totalCount }
@@ -118,6 +122,20 @@ def summarize(user):
         {"name": n, "share": 100 * s / total, "color": colors[n]} for n, s in top
     ]
 
+    calendar = contrib["contributionCalendar"]
+    days = [d for week in calendar["weeks"] for d in week["contributionDays"]]
+    weekly = [
+        sum(d["contributionCount"] for d in week["contributionDays"])
+        for week in calendar["weeks"]
+    ]
+
+    longest = run = 0
+    for day in days:
+        run = run + 1 if day["contributionCount"] else 0
+        longest = max(longest, run)
+
+    busiest = max(days, key=lambda d: d["contributionCount"]) if days else None
+
     return {
         "name": user["name"] or user["login"],
         "login": user["login"],
@@ -131,6 +149,14 @@ def summarize(user):
         "followers": user["followers"]["totalCount"],
         "languages": languages,
         "language_count": len(sizes),
+        "weekly": weekly,
+        "week_starts": [
+            week["contributionDays"][0]["date"] for week in calendar["weeks"]
+        ],
+        "active_days": sum(1 for d in days if d["contributionCount"]),
+        "longest_streak": longest,
+        "busiest_day": busiest["date"] if busiest else "",
+        "busiest_count": busiest["contributionCount"] if busiest else 0,
     }
 
 
@@ -140,9 +166,11 @@ def human(n):
     return f"{n:,}".replace(",", " ")
 
 
-def shell(theme, title, note, body):
+def shell(theme, title, note, body, w=None, h=None):
     t = THEMES[theme]
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-label="{escape(title)}">
+    w = w or W
+    h = h or H
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" aria-label="{escape(title)}">
 <title>{escape(title)}</title>
 <defs>
   <radialGradient id="glow" cx="100%" cy="0%" r="85%">
@@ -160,18 +188,26 @@ def shell(theme, title, note, body):
   .lang {{ font-size: 12.5px; fill: {t['text']}; }}
   .pct {{ font-family: {MONO}; font-size: 11.5px; fill: {t['muted']}; }}
   .rule {{ stroke: {t['border']}; }}
+  .grid {{ stroke: {t['border']}; stroke-dasharray: 2 4; }}
+  .axis {{ font-size: 9.5px; fill: {t['muted']}; letter-spacing: .5px; }}
+  .foot {{ font-size: 11.5px; fill: {t['muted']}; }}
+  .footv {{ font-size: 11.5px; font-weight: 600; fill: {t['accent']}; }}
+  .sep {{ fill: {t['border']}; }}
+  .peak {{ font-family: {MONO}; font-size: 10px; font-weight: 700; fill: {t['accent']}; }}
+  .spark {{ stroke-dasharray: 4000; animation: draw 2.2s ease-out both; }}
+  @keyframes draw {{ from {{ stroke-dashoffset: 4000; }} to {{ stroke-dashoffset: 0; }} }}
   .in {{ animation: rise .55s cubic-bezier(.2,.7,.3,1) both; }}
   .bar {{ transform-box: fill-box; transform-origin: left center; animation: grow .9s cubic-bezier(.2,.7,.3,1) both; }}
   @keyframes rise {{ from {{ opacity: 0; transform: translateY(7px); }} to {{ opacity: 1; transform: none; }} }}
   @keyframes grow {{ from {{ transform: scaleX(0); }} to {{ transform: scaleX(1); }} }}
-  @media (prefers-reduced-motion: reduce) {{ .in, .bar {{ animation: none; }} }}
+  @media (prefers-reduced-motion: reduce) {{ .in, .bar, .spark, .fill {{ animation: none; }} }}
 </style>
-<rect class="card" x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="12"/>
-<rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="12" fill="url(#glow)"/>
+<rect class="card" x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="12"/>
+<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="12" fill="url(#glow)"/>
 <rect x="{PAD}" y="26" width="3" height="14" rx="1.5" fill="{t['accent']}"/>
 <text class="h" x="{PAD + 12}" y="38">{escape(title)}</text>
-<text class="note" x="{W - PAD}" y="37" text-anchor="end">{escape(note)}</text>
-<line class="rule" x1="{PAD}" y1="54" x2="{W - PAD}" y2="54"/>
+<text class="note" x="{w - PAD}" y="37" text-anchor="end">{escape(note)}</text>
+<line class="rule" x1="{PAD}" y1="54" x2="{w - PAD}" y2="54"/>
 {body}
 </svg>
 """
@@ -239,6 +275,120 @@ def language_card(theme, s):
     return shell(theme, "Most Used Languages", "weighted by repo", "\n".join(parts))
 
 
+AW, AH = 880, 232
+
+
+def smooth_path(points):
+    """Catmull-Rom through the points, emitted as cubic beziers."""
+    if len(points) < 2:
+        return ""
+    d = [f"M{points[0][0]:.2f},{points[0][1]:.2f}"]
+    for i in range(len(points) - 1):
+        p0 = points[i - 1] if i else points[0]
+        p1, p2 = points[i], points[i + 1]
+        p3 = points[i + 2] if i + 2 < len(points) else p2
+        c1 = (p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6)
+        c2 = (p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6)
+        d.append(
+            f"C{c1[0]:.2f},{c1[1]:.2f} {c2[0]:.2f},{c2[1]:.2f} {p2[0]:.2f},{p2[1]:.2f}"
+        )
+    return " ".join(d)
+
+
+def pretty_date(iso):
+    try:
+        return datetime.date.fromisoformat(iso).strftime("%-d %b %Y")
+    except ValueError:
+        return iso
+
+
+def activity_card(theme, s):
+    t = THEMES[theme]
+    weekly = s["weekly"]
+    x0, x1 = PAD, AW - PAD
+    y0, y1 = 76, 168
+    peak = max(weekly) if weekly else 0
+    scale = peak or 1
+    step = (x1 - x0) / max(len(weekly) - 1, 1)
+
+    points = [
+        (x0 + i * step, y1 - (v / scale) * (y1 - y0))
+        for i, v in enumerate(weekly)
+    ]
+    line = smooth_path(points)
+    area = f"{line} L{x1:.2f},{y1} L{x0:.2f},{y1} Z" if line else ""
+
+    parts = [
+        f"""<style>
+  .fill {{ animation: fade 1.4s .45s ease both; }}
+  @keyframes fade {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
+</style>
+<defs>
+  <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="{t['accent']}" stop-opacity=".38"/>
+    <stop offset="100%" stop-color="{t['accent']}" stop-opacity="0"/>
+  </linearGradient>
+</defs>"""
+    ]
+
+    # Reference lines at the peak, at half of it and at zero.
+    for frac in (1.0, 0.5, 0.0):
+        y = y1 - frac * (y1 - y0)
+        parts.append(f'<line class="grid" x1="{x0}" y1="{y:.1f}" x2="{x1}" y2="{y:.1f}"/>')
+
+    if area:
+        parts.append(f'<path class="fill" d="{area}" fill="url(#area)"/>')
+        parts.append(
+            f'<path class="spark" d="{line}" fill="none" stroke="{t["accent"]}" '
+            f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+        )
+        top = min(points, key=lambda pt: pt[1])
+        label_x = min(max(top[0], x0 + 14), x1 - 14)
+        parts.append(
+            f'<g class="in" style="animation-delay:1.6s">'
+            f'<circle cx="{top[0]:.2f}" cy="{top[1]:.2f}" r="3.5" fill="{t["bg"]}" '
+            f'stroke="{t["accent"]}" stroke-width="2"/>'
+            f'<text class="peak" x="{label_x:.2f}" y="{top[1] - 9:.2f}" '
+            f'text-anchor="middle">{peak}</text></g>'
+        )
+
+    # One label per month, placed on the week that starts it.
+    seen = set()
+    for i, iso in enumerate(s["week_starts"]):
+        month = iso[:7]
+        if month in seen:
+            continue
+        seen.add(month)
+        x = x0 + i * step
+        if x > x1 - 18:
+            continue
+        label = datetime.date.fromisoformat(iso).strftime("%b")
+        parts.append(f'<text class="axis" x="{x:.1f}" y="{y1 + 16}">{label}</text>')
+
+    facts = [
+        (human(s["active_days"]), "active days"),
+        (f'{s["longest_streak"]}', "day longest streak"),
+        (f'{s["busiest_count"]}', f'on {pretty_date(s["busiest_day"])}, the busiest day'),
+    ]
+    spans = []
+    for i, (value, label) in enumerate(facts):
+        lead = '<tspan class="sep" dx="10">·</tspan> ' if i else ""
+        spans.append(f'{lead}<tspan class="footv">{value}</tspan> {escape(label)}')
+    parts.append(
+        f'<line class="rule" x1="{PAD}" y1="{y1 + 30}" x2="{AW - PAD}" y2="{y1 + 30}"/>'
+        f'<text class="foot" x="{PAD}" y="{y1 + 50}">{" ".join(spans)}</text>'
+    )
+
+    return shell(
+        theme,
+        "Contribution Activity",
+        "per week, last 12 months",
+        "\n".join(parts),
+        w=AW,
+        h=AH,
+    )
+
+
 def main():
     out_dir = sys.argv[1] if len(sys.argv) > 1 else "dist"
     login = os.environ.get("GH_USER") or "GrossManuelHTL"
@@ -254,13 +404,15 @@ def main():
         for name, svg in (
             (f"stats{suffix}.svg", stats_card(theme, s)),
             (f"langs{suffix}.svg", language_card(theme, s)),
+            (f"activity{suffix}.svg", activity_card(theme, s)),
         ):
             path = os.path.join(out_dir, name)
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(svg)
             print(f"wrote {path}")
 
-    print(json.dumps({k: v for k, v in s.items() if k != "languages"}, indent=2))
+    skip = {"languages", "weekly", "week_starts"}
+    print(json.dumps({k: v for k, v in s.items() if k not in skip}, indent=2))
 
 
 if __name__ == "__main__":

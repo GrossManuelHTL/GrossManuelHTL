@@ -81,22 +81,25 @@ data class Manuel(
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/stats-dark.svg" />
-    <img height="170" alt="GitHub stats" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/stats.svg" />
+    <img height="180" alt="GitHub stats" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/stats.svg" />
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/langs-dark.svg" />
-    <img height="170" alt="Most used languages" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/langs.svg" />
+    <img height="180" alt="Most used languages" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/langs.svg" />
   </picture>
 </p>
 
 <p align="center">
-  <img height="165" alt="Contribution streak" src="https://streak-stats.demolab.com?user=GrossManuelHTL&theme=tokyonight&hide_border=true&background=0d1117&ring=00e0b8&fire=00e0b8&currStreakLabel=00e0b8&dates=8b949e" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/activity-dark.svg" />
+    <img width="810" alt="Contribution activity over the last 12 months" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/activity.svg" />
+  </picture>
 </p>
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/github-snake-dark.svg" />
-    <img alt="contribution snake eating my commits" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/github-snake.svg" />
+    <img width="810" alt="contribution snake eating my commits" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/github-snake.svg" />
   </picture>
 </p>
 
@@ -110,13 +113,14 @@ Everything above is regenerated nightly by [one workflow](.github/workflows/snak
 | Asset | Built by |
 | --- | --- |
 | `github-snake.svg`, `github-snake-dark.svg` | [`Platane/snk`](https://github.com/Platane/snk), recoloured to match the palette |
-| `stats.svg`, `langs.svg` (+ dark variants) | [`profile_cards.py`](.github/scripts/profile_cards.py) against the GitHub GraphQL API |
+| `stats.svg`, `langs.svg`, `activity.svg` (+ dark variants) | [`profile_cards.py`](.github/scripts/profile_cards.py) against the GitHub GraphQL API |
 
 The cards are self-hosted on purpose. The popular public card services keep going down, and a
 paused deployment turns a profile into a wall of broken images.
 
 Language shares weight every repository equally rather than by byte count, so one large
-generated project cannot swallow the chart.
+generated project cannot swallow the chart. The activity chart aggregates the contribution
+calendar per week and marks the busiest one.
 
 </details>
 
