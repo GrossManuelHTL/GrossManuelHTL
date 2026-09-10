@@ -23,15 +23,6 @@
   </picture>
 </p>
 
-## 🗺️ A year of commits
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/iso-dark.svg" />
-    <img width="810" alt="Isometric view of the last 12 months of contributions" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/iso.svg" />
-  </picture>
-</p>
-
 ## 🛠️ Stack
 
 <table align="center">
@@ -94,10 +85,12 @@
   </picture>
 </p>
 
+## 📡 Signal
+
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/activity-dark.svg" />
-    <img width="810" alt="Contribution activity over the last 12 months" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/activity.svg" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/signal-dark.svg" />
+    <img width="810" alt="A drifting ridgeline field driven by a year of commits" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/signal.svg" />
   </picture>
 </p>
 
@@ -118,18 +111,20 @@ Everything above is regenerated nightly by [one workflow](.github/workflows/snak
 | Asset | Built by |
 | --- | --- |
 | `github-snake.svg`, `github-snake-dark.svg` | [`Platane/snk`](https://github.com/Platane/snk), recoloured to match the palette |
-| `header.svg`, `profile.svg`, `iso.svg`, `stats.svg`, `langs.svg`, `activity.svg`, `footer.svg` (+ dark variants) | [`profile_cards.py`](.github/scripts/profile_cards.py) against the GitHub GraphQL API |
+| `header.svg`, `profile.svg`, `stats.svg`, `langs.svg`, `signal.svg`, `footer.svg` (+ dark variants) | [`profile_cards.py`](.github/scripts/profile_cards.py) against the GitHub GraphQL API |
 
 The cards are self-hosted on purpose. The popular public card services keep going down, and a
 paused deployment turns a profile into a wall of broken images. The terminal banner at the top,
 cycling text and all, is a plain SVG with CSS keyframes rather than a call to a rendering service.
 
-The isometric year projects each day of the contribution calendar as a block whose height is
-that day's count, drawn back to front so the blocks occlude each other correctly.
-
 Language shares weight every repository equally rather than by byte count, so one large
-generated project cannot swallow the chart. The activity chart aggregates the contribution
-calendar per week and marks the busiest one.
+generated project cannot swallow the chart.
+
+The signal field stacks 26 ridges, one per window of real days, each resampled to a single
+loop and drawn twice end to end. Every ridge then slides left by exactly one loop width, so
+the motion repeats without a seam, and the rows run at different speeds to fake depth. Each
+ridge is filled with the panel colour, which is what lets the front rows hide the ones behind
+them. It is pure CSS keyframes, no script, and it holds still under `prefers-reduced-motion`.
 
 </details>
 

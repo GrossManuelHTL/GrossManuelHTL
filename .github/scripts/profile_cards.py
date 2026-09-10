@@ -8,6 +8,7 @@ Stdlib only, so the workflow needs no install step.
 
 import datetime
 import json
+import math
 import os
 import sys
 import urllib.error
@@ -127,10 +128,6 @@ def summarize(user):
 
     calendar = contrib["contributionCalendar"]
     days = [d for week in calendar["weeks"] for d in week["contributionDays"]]
-    weekly = [
-        sum(d["contributionCount"] for d in week["contributionDays"])
-        for week in calendar["weeks"]
-    ]
 
     longest = run = 0
     for day in days:
@@ -162,10 +159,6 @@ def summarize(user):
         "grid": grid,
         "week_count": len(calendar["weeks"]),
         "peak_day": max((c for _, _, c in grid), default=0),
-        "weekly": weekly,
-        "week_starts": [
-            week["contributionDays"][0]["date"] for week in calendar["weeks"]
-        ],
         "active_days": sum(1 for d in days if d["contributionCount"]),
         "longest_streak": longest,
         "busiest_day": busiest["date"] if busiest else "",
@@ -299,124 +292,156 @@ def language_card(theme, s):
     return shell(theme, "Most Used Languages", "weighted by repo", "\n".join(parts))
 
 
-AW, AH = 880, 232
+SIG_W, SIG_H = 880, 450
+RIDGES = 26          # stacked lines, back to front
+PERIOD = 34          # samples in one loop of the waveform
+OVERHANG = 60        # how far the closing edges sit outside the clip
 
 
-def smooth_path(points):
-    """Catmull-Rom through the points, emitted as cubic beziers."""
-    if len(points) < 2:
-        return ""
-    d = [f"M{points[0][0]:.2f},{points[0][1]:.2f}"]
-    for i in range(len(points) - 1):
-        p0 = points[i - 1] if i else points[0]
-        p1, p2 = points[i], points[i + 1]
-        p3 = points[i + 2] if i + 2 < len(points) else p2
-        c1 = (p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6)
-        c2 = (p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6)
-        d.append(
-            f"C{c1[0]:.2f},{c1[1]:.2f} {c2[0]:.2f},{c2[1]:.2f} {p2[0]:.2f},{p2[1]:.2f}"
-        )
-    return " ".join(d)
-
-
-def pretty_date(iso):
-    try:
-        return datetime.date.fromisoformat(iso).strftime("%-d %b %Y")
-    except ValueError:
-        return iso
-
-
-def activity_card(theme, s):
-    t = THEMES[theme]
-    weekly = s["weekly"]
-    x0, x1 = PAD, AW - PAD
-    y0, y1 = 76, 168
-    peak = max(weekly) if weekly else 0
-    scale = peak or 1
-    step = (x1 - x0) / max(len(weekly) - 1, 1)
-
-    points = [
-        (x0 + i * step, y1 - (v / scale) * (y1 - y0))
-        for i, v in enumerate(weekly)
-    ]
-    line = smooth_path(points)
-    area = f"{line} L{x1:.2f},{y1} L{x0:.2f},{y1} Z" if line else ""
-
-    parts = [
-        f"""<style>
-  .fill {{ animation: fade 1.4s .45s ease both; }}
-  @keyframes fade {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
-</style>
-<defs>
-  <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="{t['accent']}" stop-opacity=".38"/>
-    <stop offset="100%" stop-color="{t['accent']}" stop-opacity="0"/>
-  </linearGradient>
-</defs>"""
-    ]
-
-    # Reference lines at the peak, at half of it and at zero.
-    for frac in (1.0, 0.5, 0.0):
-        y = y1 - frac * (y1 - y0)
-        parts.append(f'<line class="grid" x1="{x0}" y1="{y:.1f}" x2="{x1}" y2="{y:.1f}"/>')
-
-    if area:
-        parts.append(f'<path class="fill" d="{area}" fill="url(#area)"/>')
-        parts.append(
-            f'<path class="spark" d="{line}" fill="none" stroke="{t["accent"]}" '
-            f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
-        )
-        top = min(points, key=lambda pt: pt[1])
-        label_x = min(max(top[0], x0 + 14), x1 - 14)
-        parts.append(
-            f'<g class="in" style="animation-delay:1.6s">'
-            f'<circle cx="{top[0]:.2f}" cy="{top[1]:.2f}" r="3.5" fill="{t["bg"]}" '
-            f'stroke="{t["accent"]}" stroke-width="2"/>'
-            f'<text class="peak" x="{label_x:.2f}" y="{top[1] - 9:.2f}" '
-            f'text-anchor="middle">{peak}</text></g>'
-        )
-
-    # One label per month, placed on the week that starts it.
-    seen = set()
-    for i, iso in enumerate(s["week_starts"]):
-        month = iso[:7]
-        if month in seen:
-            continue
-        seen.add(month)
-        x = x0 + i * step
-        if x > x1 - 18:
-            continue
-        label = datetime.date.fromisoformat(iso).strftime("%b")
-        parts.append(f'<text class="axis" x="{x:.1f}" y="{y1 + 16}">{label}</text>')
-
-    facts = [
-        (human(s["active_days"]), "active days"),
-        (f'{s["longest_streak"]}', "day longest streak"),
-        (f'{s["busiest_count"]}', f'on {pretty_date(s["busiest_day"])}, the busiest day'),
-    ]
-    spans = []
-    for i, (value, label) in enumerate(facts):
-        lead = '<tspan class="sep" dx="10">·</tspan> ' if i else ""
-        spans.append(f'{lead}<tspan class="footv">{value}</tspan> {escape(label)}')
-    parts.append(
-        f'<line class="rule" x1="{PAD}" y1="{y1 + 30}" x2="{AW - PAD}" y2="{y1 + 30}"/>'
-        f'<text class="foot" x="{PAD}" y="{y1 + 50}">{" ".join(spans)}</text>'
+def mix(a, b, t):
+    """Blend two #rrggbb colours; t=0 is a, t=1 is b."""
+    ca = [int(a[i : i + 2], 16) for i in (1, 3, 5)]
+    cb = [int(b[i : i + 2], 16) for i in (1, 3, 5)]
+    return "#%02x%02x%02x" % tuple(
+        round(x + (y - x) * t) for x, y in zip(ca, cb)
     )
+
+
+def ridge_path(profile, x0, step, base, amp, floor):
+    """A seamless Catmull-Rom ridge over two loops of profile, closed downwards.
+
+    The samples are read modulo the period and the tangents reach one sample
+    past each end, so the curve joins itself exactly where the loop restarts.
+    The closing edges are pushed outside the clip, otherwise the stroke would
+    draw them as bright verticals down the sides of the field.
+    """
+    n = len(profile)
+    last = 2 * n
+
+    def pt(i):
+        return x0 + i * step, base - amp * profile[i % n]
+
+    d = ["M%.1f,%.1f" % pt(0)]
+    for i in range(last):
+        (x0_, y0_), (x1_, y1_) = pt(i - 1), pt(i)
+        (x2, y2), (x3, y3) = pt(i + 1), pt(i + 2)
+        d.append(
+            "C%.1f,%.1f %.1f,%.1f %.1f,%.1f"
+            % (
+                x1_ + (x2 - x0_) / 6, y1_ + (y2 - y0_) / 6,
+                x2 - (x3 - x1_) / 6, y2 - (y3 - y1_) / 6,
+                x2, y2,
+            )
+        )
+    end_x = x0 + last * step
+    d.append(
+        "L%.1f,%.1f L%.1f,%.1f Z"
+        % (end_x + OVERHANG, floor, x0 - OVERHANG, floor)
+    )
+    return "".join(d)
+
+
+def signal_card(theme, s):
+    """The contribution year as a drifting ridgeline field.
+
+    Every row is a window of real days, resampled to one loop of PERIOD
+    samples and drawn twice side by side. Each row then slides left by exactly
+    one loop width, so the motion never shows a seam, and the rows run at
+    different speeds to give the stack depth.
+    """
+    t = THEMES[theme]
+    counts = [c for _, _, c in s["grid"]] or [0]
+    peak = max(counts) or 1
+
+    x0, x1 = PAD, SIG_W - PAD
+    span = x1 - x0
+    step = span / PERIOD
+    top, bottom = 88, SIG_H - 64
+    floor = bottom + 90        # below the clip, so the closing edge never shows
+    clip_h = bottom + 12 - 66
+
+    rows = []
+    for r in range(RIDGES):
+        f = r / (RIDGES - 1)                      # 0 = far back, 1 = front
+        base = top + (f ** 1.3) * (bottom - top)  # rows compress into the distance
+        amp = 10 + 36 * f ** 1.25
+
+        # One window of days per row, walked a week at a time through the year.
+        profile = []
+        for i in range(PERIOD):
+            day = counts[(r * 7 + i) % len(counts)] / peak
+            # A slow standing wave keeps quiet stretches from flatlining.
+            wave = 0.5 + 0.5 * math.sin(2 * math.pi * 3 * i / PERIOD + r * 0.7)
+            profile.append(0.78 * day ** 0.7 + 0.22 * wave)
+
+        stroke = mix(t["muted"], t["accent"], f ** 1.1)
+        rows.append(
+            '<path d="{d}" fill="{panel}" stroke="{stroke}" stroke-width="{sw:.2f}" '
+            'stroke-opacity="{op:.2f}" stroke-linejoin="round"{lift} class="ridge" '
+            'style="animation-duration:{dur:.1f}s"/>'.format(
+                d=ridge_path(profile, x0, step, base, amp, floor),
+                panel=t["panel"],
+                stroke=stroke,
+                sw=0.9 + 1.1 * f,
+                op=0.42 + 0.58 * f,
+                lift=' filter="url(#lift)"' if f > 0.74 else "",
+                dur=46 - 30 * f,
+            )
+        )
 
     return shell(
         theme,
-        "Contribution Activity",
-        "per week, last 12 months",
-        "\n".join(parts),
-        w=AW,
-        h=AH,
+        "Signal",
+        f'{human(s["contributions"])} contributions',
+        f"""<defs>
+  <filter id="lift" x="-12%" y="-40%" width="124%" height="200%">
+    <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="{t['accent']}" flood-opacity=".55"/>
+  </filter>
+  <clipPath id="plot"><rect x="{x0}" y="66" width="{span}" height="{clip_h}" rx="9"/></clipPath>
+  <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="{t['accent']}" stop-opacity="0"/>
+    <stop offset="50%" stop-color="{t['accent']}" stop-opacity=".22"/>
+    <stop offset="100%" stop-color="{t['accent']}" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="edgeL" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="{t['panel']}"/>
+    <stop offset="100%" stop-color="{t['panel']}" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="edgeR" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="{t['panel']}" stop-opacity="0"/>
+    <stop offset="100%" stop-color="{t['panel']}"/>
+  </linearGradient>
+</defs>
+<style>
+  .ridge {{ animation-name: drift; animation-timing-function: linear; animation-iteration-count: infinite; }}
+  @keyframes drift {{ from {{ transform: translateX(0); }} to {{ transform: translateX({-span:.1f}px); }} }}
+  .beam {{ animation: sweep 7.5s linear infinite; }}
+  @keyframes sweep {{ from {{ transform: translateX(-220px); }} to {{ transform: translateX({span:.1f}px); }} }}
+  .live {{ animation: pulse 2.4s ease-in-out infinite; }}
+  @keyframes pulse {{ 0%,100% {{ opacity: 1; }} 50% {{ opacity: .25; }} }}
+  .meta {{ font-family: {MONO}; font-size: 10px; fill: {t['muted']}; letter-spacing: 1px; }}
+  @media (prefers-reduced-motion: reduce) {{
+    .ridge, .beam, .live {{ animation: none; }}
+  }}
+</style>
+<rect x="{x0}" y="66" width="{span}" height="{clip_h}" rx="9" fill="{t['panel']}" stroke="{t['border']}"/>
+<g clip-path="url(#plot)">
+{chr(10).join(rows)}
+<rect class="beam" x="{x0}" y="66" width="220" height="{clip_h}" fill="url(#beam)"/>
+</g>
+<rect x="{x0}" y="66" width="30" height="{clip_h}" fill="url(#edgeL)"/>
+<rect x="{x1 - 30}" y="66" width="30" height="{clip_h}" fill="url(#edgeR)"/>
+<text class="meta" x="{x0}" y="{SIG_H - 20}">{s["week_count"]} WEEKS &#183; PEAK {s["peak_day"]}/DAY &#183; {s["longest_streak"]}-DAY STREAK</text>
+<circle class="live" cx="{x1 - 46}" cy="{SIG_H - 24}" r="3" fill="{t['accent']}"/>
+<text class="meta" x="{x1}" y="{SIG_H - 20}" text-anchor="end" fill="{t['accent']}">LIVE</text>""",
+        w=SIG_W,
+        h=SIG_H,
     )
 
 
 HEADER_W, HEADER_H = 880, 122
 FOOTER_W, FOOTER_H = 880, 60
 PROFILE_W, PROFILE_H = 880, 186
-ISO_W, ISO_H = 880, 440
 
 # The bio. Edit these two columns and push; the workflow redraws the card.
 PROFILE_LEFT = [
@@ -479,111 +504,6 @@ def profile_card(theme, s):
     return shell(theme, "About me", "", body, w=PROFILE_W, h=PROFILE_H, chrome=False)
 
 
-def shade(hex_color, factor):
-    """Multiply an #rrggbb colour by factor, clamped to the 0-255 range."""
-    r, g, b = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
-    return "#%02x%02x%02x" % tuple(
-        max(0, min(255, round(channel * factor))) for channel in (r, g, b)
-    )
-
-
-def iso_card(theme, s):
-    """The contribution year as an isometric field of blocks."""
-    t = THEMES[theme]
-    grid = s["grid"]
-    weeks = s["week_count"]
-    peak = s["peak_day"] or 1
-
-    half_w, half_d = 14.0, 4.6   # half width and half depth of one tile
-    max_h = 72.0                 # height of a block on the busiest day
-    # Centre the diamond: col - row runs from -6 to weeks - 1.
-    x0 = ISO_W / 2 - ((weeks - 1) - 6) / 2 * half_w
-
-    def height_of(count):
-        return max(3.0, count / peak * max_h) if count else 0.0
-
-    # Where the field actually starts depends on the data, since an early
-    # quiet week leaves the top of the diamond empty. Measure, then shift.
-    tops = [
-        (col + row) * half_d - height_of(count) - half_d
-        for col, row, count in grid
-    ]
-    y0 = 76.0 - min(tops, default=0.0)
-
-    levels = t["levels"]
-    empty = t["track"]
-
-    blocks = []
-    # Painter's algorithm: smaller col + row sits further back, so it goes first.
-    for col, row, count in sorted(grid, key=lambda g: (g[0] + g[1], g[1])):
-        bx = x0 + (col - row) * half_w
-        by = y0 + (col + row) * half_d
-        if not count:
-            blocks.append(
-                f'<path d="M{bx:.1f} {by - half_d:.1f}l{half_w:.1f} {half_d:.1f}'
-                f'l{-half_w:.1f} {half_d:.1f}l{-half_w:.1f} {-half_d:.1f}z" fill="{empty}"/>'
-            )
-            continue
-
-        height = height_of(count)
-        step = min(int(count / peak * 4) + 1, 4) - 1
-        top = levels[step]
-        ty = by - height
-        delay = (col + row) * 0.011 + 0.15
-        blocks.append(
-            f'<g class="blk" style="animation-delay:{delay:.2f}s">'
-            f'<path d="M{bx:.1f} {ty - half_d:.1f}l{half_w:.1f} {half_d:.1f}'
-            f'l{-half_w:.1f} {half_d:.1f}l{-half_w:.1f} {-half_d:.1f}z" fill="{top}"/>'
-            f'<path d="M{bx - half_w:.1f} {ty:.1f}l{half_w:.1f} {half_d:.1f}'
-            f'v{height:.1f}l{-half_w:.1f} {-half_d:.1f}z" fill="{shade(top, 0.62)}"/>'
-            f'<path d="M{bx:.1f} {ty + half_d:.1f}l{half_w:.1f} {-half_d:.1f}'
-            f'v{height:.1f}l{-half_w:.1f} {half_d:.1f}z" fill="{shade(top, 0.42)}"/>'
-            f"</g>"
-        )
-
-    # Month names ride the front edge, which is the row = 6 diagonal.
-    labels, seen = [], set()
-    for i, iso in enumerate(s["week_starts"]):
-        if iso[:7] in seen:
-            continue
-        seen.add(iso[:7])
-        lx = x0 + (i - 6) * half_w - 13
-        ly = y0 + (i + 6) * half_d + 17
-        if not (6 < lx < ISO_W - PAD and ly < ISO_H - 10):
-            continue
-        labels.append(
-            f'<text class="axis" x="{lx:.0f}" y="{ly:.0f}" text-anchor="middle">'
-            f'{datetime.date.fromisoformat(iso).strftime("%b")}</text>'
-        )
-
-    legend_x = PAD + 34
-    legend_y = ISO_H - 26
-    swatches = "".join(
-        f'<rect x="{legend_x + i * 15}" y="{legend_y}" width="11" height="11" rx="2" fill="{c}"/>'
-        for i, c in enumerate([empty] + list(levels))
-    )
-    body = f"""<style>
-  .blk {{ transform-box: fill-box; transform-origin: 50% 100%;
-          animation: sprout .7s cubic-bezier(.2,.8,.3,1) both; }}
-  @keyframes sprout {{ from {{ transform: scaleY(.02); opacity: 0; }}
-                       to {{ transform: none; opacity: 1; }} }}
-  @media (prefers-reduced-motion: reduce) {{ .blk {{ animation: none; }} }}
-</style>
-{swatches}
-<text class="axis" x="{legend_x - 6}" y="{legend_y + 9}" text-anchor="end">LESS</text>
-<text class="axis" x="{legend_x + 81}" y="{legend_y + 9}" text-anchor="start">MORE</text>
-{''.join(blocks)}
-{''.join(labels)}"""
-    return shell(
-        theme,
-        "Contribution Landscape",
-        f'{human(s["contributions"])} contributions',
-        body,
-        w=ISO_W,
-        h=ISO_H,
-    )
-
-
 def footer_card(theme, s):
     t = THEMES[theme]
     body = f"""<defs>
@@ -615,18 +535,17 @@ def main():
         for name, svg in (
             (f"stats{suffix}.svg", stats_card(theme, s)),
             (f"langs{suffix}.svg", language_card(theme, s)),
-            (f"activity{suffix}.svg", activity_card(theme, s)),
+            (f"signal{suffix}.svg", signal_card(theme, s)),
             (f"header{suffix}.svg", header_card(theme, s)),
             (f"footer{suffix}.svg", footer_card(theme, s)),
             (f"profile{suffix}.svg", profile_card(theme, s)),
-            (f"iso{suffix}.svg", iso_card(theme, s)),
         ):
             path = os.path.join(out_dir, name)
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(svg)
             print(f"wrote {path}")
 
-    skip = {"languages", "weekly", "week_starts", "grid"}
+    skip = {"languages", "grid"}
     print(json.dumps({k: v for k, v in s.items() if k not in skip}, indent=2))
 
 
