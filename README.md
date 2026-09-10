@@ -1,16 +1,82 @@
-# Hi, I'm Manuel Gross
+<div align="center">
 
-## About Me:
-I'm currently a student at HTL Leonding, Austria
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,100:00e0b8&height=200&section=header&text=Hey,%20I'm%20Manuel&fontSize=50&fontColor=ffffff&animation=fadeIn&fontAlignY=38" width="100%" />
 
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&pause=1200&color=00E0B8&center=true&vCenter=true&width=620&lines=Full-stack+dev+from+Linz+%F0%9F%87%A6%F0%9F%87%B9;Kotlin+%E2%80%A2+C%23+%E2%80%A2+TypeScript+%E2%80%A2+Python;From+Kubernetes+to+computer+vision;Works+on+my+machine.+Ships+in+Docker.+%F0%9F%90%B3" alt="Typing SVG" />
 
-# Tech Stack:
-![C#](https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=csharp&logoColor=white) ![Bash Script](https://img.shields.io/badge/bash_script-%23121011.svg?style=for-the-badge&logo=gnu-bash&logoColor=white) ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Windows Terminal](https://img.shields.io/badge/Windows%20Terminal-%234D4D4D.svg?style=for-the-badge&logo=windows-terminal&logoColor=white) ![Markdown](https://img.shields.io/badge/markdown-%23000000.svg?style=for-the-badge&logo=markdown&logoColor=white) ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white) ![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white) ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E) ![Azure](https://img.shields.io/badge/azure-%230072C6.svg?style=for-the-badge&logo=microsoftazure&logoColor=white) ![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=for-the-badge&logo=kubernetes&logoColor=white) ![.Net](https://img.shields.io/badge/.NET-5C2D91?style=for-the-badge&logo=.net&logoColor=white) ![Anaconda](https://img.shields.io/badge/Anaconda-%2344A833.svg?style=for-the-badge&logo=anaconda&logoColor=white) ![Angular](https://img.shields.io/badge/angular-%23DD0031.svg?style=for-the-badge&logo=angular&logoColor=white) ![Angular.js](https://img.shields.io/badge/angular.js-%23E23237.svg?style=for-the-badge&logo=angularjs&logoColor=white) ![Expo](https://img.shields.io/badge/expo-1C1E24?style=for-the-badge&logo=expo&logoColor=#D04A37) ![Chart.js](https://img.shields.io/badge/chart.js-F5788D.svg?style=for-the-badge&logo=chart.js&logoColor=white) ![Bootstrap](https://img.shields.io/badge/bootstrap-%238511FA.svg?style=for-the-badge&logo=bootstrap&logoColor=white) ![Blazor](https://img.shields.io/badge/blazor-%235C2D91.svg?style=for-the-badge&logo=blazor&logoColor=white) ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB) ![JavaFX](https://img.shields.io/badge/javafx-%23FF0000.svg?style=for-the-badge&logo=javafx&logoColor=white) ![jQuery](https://img.shields.io/badge/jquery-%230769AD.svg?style=for-the-badge&logo=jquery&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens) ![OpenCV](https://img.shields.io/badge/opencv-%23white.svg?style=for-the-badge&logo=opencv&logoColor=white) ![SASS](https://img.shields.io/badge/SASS-hotpink.svg?style=for-the-badge&logo=SASS&logoColor=white) ![Nodemon](https://img.shields.io/badge/NODEMON-%23323330.svg?style=for-the-badge&logo=nodemon&logoColor=%BBDEAD) ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) ![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white) ![React Native](https://img.shields.io/badge/react_native-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![Socket.io](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101) ![Apache Maven](https://img.shields.io/badge/Apache%20Maven-C71A36?style=for-the-badge&logo=Apache%20Maven&logoColor=white) ![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white) ![Firebase](https://img.shields.io/badge/firebase-a08021?style=for-the-badge&logo=firebase&logoColor=ffcd34) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![MicrosoftSQLServer](https://img.shields.io/badge/Microsoft%20SQL%20Server-CC2927?style=for-the-badge&logo=microsoft%20sql%20server&logoColor=white) ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white) ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white) ![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white) ![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white) ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white) ![GitLab](https://img.shields.io/badge/gitlab-%23181717.svg?style=for-the-badge&logo=gitlab&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white) ![GitLab CI](https://img.shields.io/badge/gitlab%20CI-%23181717.svg?style=for-the-badge&logo=gitlab&logoColor=white) ![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) ![Cisco](https://img.shields.io/badge/cisco-%23049fd9.svg?style=for-the-badge&logo=cisco&logoColor=black) ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white) ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white) ![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white) ![Raspberry Pi](https://img.shields.io/badge/-Raspberry_Pi-C51A4A?style=for-the-badge&logo=Raspberry-Pi)
+<br/>
 
-### Random Dev Quote
-![](https://quotes-github-readme.vercel.app/api?type=horizontal&theme=gruvbox)
+<img src="https://komarev.com/ghpvc/?username=GrossManuelHTL&style=for-the-badge&color=00e0b8&label=Profile+Views" />
+
+</div>
 
 ---
-[![](https://visitcount.itsvg.in/api?id=GrossManuelHtl&icon=0&color=0)](https://visitcount.itsvg.in)
 
-<!-- Proudly created with GPRM ( https://gprm.itsvg.in ) -->
+```kotlin
+data class Manuel(
+    val basedIn: String       = "Marchtrenk, Austria 🇦🇹",
+    val school: String        = "HTBLA Leonding",
+    val speaks: List<String>  = listOf("Kotlin", "Java", "C#", "TypeScript", "Python"),
+    val into: List<String>    = listOf("backend", "cloud & containers", "computer vision"),
+    val offline: String       = "probably on a tennis court 🎾",
+)
+```
+
+## 🛠️ Stack
+
+<p align="center">
+  <b>LANGUAGES</b><br/><br/>
+  <img src="https://skillicons.dev/icons?i=kotlin,java,cs,py,ts,js,bash,html,sass,md&theme=dark" />
+</p>
+
+<p align="center">
+  <b>FRONTEND & MOBILE</b><br/><br/>
+  <img src="https://skillicons.dev/icons?i=angular,react,bootstrap,jquery,androidstudio&theme=dark" /><br/>
+  <img src="https://img.shields.io/badge/Expo-0d1117?style=flat-square&logo=expo&logoColor=white" />
+  <img src="https://img.shields.io/badge/React_Native-0d1117?style=flat-square&logo=react&logoColor=61DAFB" />
+  <img src="https://img.shields.io/badge/Blazor-0d1117?style=flat-square&logo=blazor&logoColor=A57BDA" />
+  <img src="https://img.shields.io/badge/JavaFX-0d1117?style=flat-square&logo=openjdk&logoColor=ED8B00" />
+  <img src="https://img.shields.io/badge/AngularJS-0d1117?style=flat-square&logo=angularjs&logoColor=E23237" />
+  <img src="https://img.shields.io/badge/Chart.js-0d1117?style=flat-square&logo=chartdotjs&logoColor=F5788D" />
+</p>
+
+<p align="center">
+  <b>BACKEND</b><br/><br/>
+  <img src="https://skillicons.dev/icons?i=nodejs,express,dotnet,hibernate,maven,npm&theme=dark" /><br/>
+  <img src="https://img.shields.io/badge/Quarkus-0d1117?style=flat-square&logo=quarkus&logoColor=4695EB" />
+  <img src="https://img.shields.io/badge/Socket.io-0d1117?style=flat-square&logo=socketdotio&logoColor=white" />
+  <img src="https://img.shields.io/badge/JWT-0d1117?style=flat-square&logo=jsonwebtokens&logoColor=white" />
+  <img src="https://img.shields.io/badge/Swagger-0d1117?style=flat-square&logo=swagger&logoColor=85EA2D" />
+  <img src="https://img.shields.io/badge/Nodemon-0d1117?style=flat-square&logo=nodemon&logoColor=76D04B" />
+</p>
+
+<p align="center">
+  <b>DATA & AI</b><br/><br/>
+  <img src="https://skillicons.dev/icons?i=postgres,sqlite,firebase,pytorch,tensorflow,sklearn,opencv,anaconda&theme=dark" /><br/>
+  <img src="https://img.shields.io/badge/SQL_Server-0d1117?style=flat-square&logo=microsoftsqlserver&logoColor=CC2927" />
+  <img src="https://img.shields.io/badge/NumPy-0d1117?style=flat-square&logo=numpy&logoColor=4DABCF" />
+</p>
+
+<p align="center">
+  <b>DEVOPS & TOOLS</b><br/><br/>
+  <img src="https://skillicons.dev/icons?i=docker,kubernetes,azure,nginx,githubactions,gitlab,git,linux,cmake,postman,windows&theme=dark" /><br/>
+  <img src="https://img.shields.io/badge/GitLab_CI-0d1117?style=flat-square&logo=gitlab&logoColor=FC6D26" />
+  <img src="https://img.shields.io/badge/Proxmox-0d1117?style=flat-square&logo=proxmox&logoColor=E57000" />
+  <img src="https://img.shields.io/badge/Cisco-0d1117?style=flat-square&logo=cisco&logoColor=049FD9" />
+</p>
+
+## 📊 Stats
+
+<p align="center">
+  <img height="165" src="https://github-readme-stats.vercel.app/api?username=GrossManuelHTL&show_icons=true&theme=tokyonight&hide_border=true&bg_color=0d1117&title_color=00e0b8&icon_color=00e0b8" />
+  <img height="165" src="https://streak-stats.demolab.com?user=GrossManuelHTL&theme=tokyonight&hide_border=true&background=0d1117&ring=00e0b8&fire=00e0b8&currStreakLabel=00e0b8" />
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/github-snake-dark.svg" />
+    <img alt="contribution snake" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/github-snake.svg" />
+  </picture>
+</p>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:00e0b8,100:0d1117&height=120&section=footer" width="100%" />
