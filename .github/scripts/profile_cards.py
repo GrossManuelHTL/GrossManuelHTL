@@ -415,7 +415,7 @@ def activity_card(theme, s):
 
 HEADER_W, HEADER_H = 880, 122
 FOOTER_W, FOOTER_H = 880, 60
-PROFILE_W, PROFILE_H = 880, 214
+PROFILE_W, PROFILE_H = 880, 186
 ISO_W, ISO_H = 880, 440
 
 # The bio. Edit these two columns and push; the workflow redraws the card.
@@ -465,7 +465,7 @@ def profile_card(theme, s):
     for c, column in enumerate((PROFILE_LEFT, PROFILE_RIGHT)):
         for r, (label, value) in enumerate(column):
             x = PAD + c * col_w
-            y = 86 + r * 46
+            y = 58 + r * 46
             rows.append(
                 f'<g class="in" style="animation-delay:{0.07 * (r * 2 + c) + 0.1:.2f}s">'
                 f'<text class="lab" x="{x:.0f}" y="{y}">{escape(label.upper())}</text>'
@@ -476,7 +476,7 @@ def profile_card(theme, s):
         f"<style>.val {{ font-size: 14px; fill: {THEMES[theme]['text']}; }}</style>"
         + "".join(rows)
     )
-    return shell(theme, "About me", "", body, w=PROFILE_W, h=PROFILE_H)
+    return shell(theme, "About me", "", body, w=PROFILE_W, h=PROFILE_H, chrome=False)
 
 
 def shade(hex_color, factor):
