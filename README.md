@@ -14,17 +14,23 @@
 
 ---
 
-## 👋 whoami
+## 👋 About me
 
-```kotlin
-data class Manuel(
-    val basedIn: String       = "Marchtrenk, Austria 🇦🇹",
-    val school: String        = "HTBLA Leonding",
-    val speaks: List<String>  = listOf("Kotlin", "Java", "C#", "TypeScript", "Python"),
-    val into: List<String>    = listOf("backend", "cloud & containers", "computer vision"),
-    val offline: String       = "probably on a tennis court 🎾",
-)
-```
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/profile-dark.svg" />
+    <img width="810" alt="Based in Marchtrenk, Upper Austria. HTBLA Leonding." src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/profile.svg" />
+  </picture>
+</p>
+
+## 🗺️ A year of commits
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/iso-dark.svg" />
+    <img width="810" alt="Isometric view of the last 12 months of contributions" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/iso.svg" />
+  </picture>
+</p>
 
 ## 🛠️ Stack
 
@@ -102,18 +108,6 @@ data class Manuel(
   </picture>
 </p>
 
-## 📂 Public work
-
-| Project | Stack |
-| --- | --- |
-| **[BallkoenigLive](https://github.com/GrossManuelHTL/BallkoenigLive)** | C#, TypeScript, CSS |
-| **[TradingTrainerWebapp](https://github.com/GrossManuelHTL/TradingTrainerWebapp)** | JavaScript |
-| **[ReadersWritersProblem](https://github.com/GrossManuelHTL/ReadersWritersProblem)** <br/> <sub>Readers Writers Problem visualised with WPF</sub> | C#, WPF |
-| **[TextAdventure_SWEftC](https://github.com/GrossManuelHTL/TextAdventure_SWEftC)** | Prolog |
-
-Most of my work lives in private school and diploma repositories, so the stats above
-cover a good deal more than this table.
-
 <details>
 <summary><b>🔧 How this page builds itself</b></summary>
 
@@ -124,11 +118,14 @@ Everything above is regenerated nightly by [one workflow](.github/workflows/snak
 | Asset | Built by |
 | --- | --- |
 | `github-snake.svg`, `github-snake-dark.svg` | [`Platane/snk`](https://github.com/Platane/snk), recoloured to match the palette |
-| `header.svg`, `footer.svg`, `stats.svg`, `langs.svg`, `activity.svg` (+ dark variants) | [`profile_cards.py`](.github/scripts/profile_cards.py) against the GitHub GraphQL API |
+| `header.svg`, `profile.svg`, `iso.svg`, `stats.svg`, `langs.svg`, `activity.svg`, `footer.svg` (+ dark variants) | [`profile_cards.py`](.github/scripts/profile_cards.py) against the GitHub GraphQL API |
 
 The cards are self-hosted on purpose. The popular public card services keep going down, and a
 paused deployment turns a profile into a wall of broken images. The terminal banner at the top,
 cycling text and all, is a plain SVG with CSS keyframes rather than a call to a rendering service.
+
+The isometric year projects each day of the contribution calendar as a block whose height is
+that day's count, drawn back to front so the blocks occlude each other correctly.
 
 Language shares weight every repository equally rather than by byte count, so one large
 generated project cannot swallow the chart. The activity chart aggregates the contribution

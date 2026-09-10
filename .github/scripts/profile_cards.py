@@ -22,13 +22,14 @@ query($login: String!) {
   user(login: $login) {
     name
     login
+    createdAt
     followers { totalCount }
     contributionsCollection {
       totalCommitContributions
       restrictedContributionsCount
       contributionCalendar {
         totalContributions
-        weeks { contributionDays { date contributionCount } }
+        weeks { contributionDays { date contributionCount weekday } }
       }
     }
     pullRequests { totalCount }
@@ -59,6 +60,7 @@ THEMES = {
         "accent": "#00e0b8",
         "track": "#1f2a35",
         "glow": "0.16",
+        "levels": ("#0a5c4f", "#0e9c85", "#14c9aa", "#00e0b8"),
     },
     "light": {
         "bg": "#ffffff",
@@ -69,6 +71,7 @@ THEMES = {
         "accent": "#00a98c",
         "track": "#e6eaef",
         "glow": "0.09",
+        "levels": ("#a8ecdf", "#5cd4bd", "#17b49a", "#009e86"),
     },
 }
 
@@ -136,6 +139,12 @@ def summarize(user):
 
     busiest = max(days, key=lambda d: d["contributionCount"]) if days else None
 
+    grid = [
+        (w, day["weekday"], day["contributionCount"])
+        for w, week in enumerate(calendar["weeks"])
+        for day in week["contributionDays"]
+    ]
+
     return {
         "name": user["name"] or user["login"],
         "login": user["login"],
@@ -149,6 +158,10 @@ def summarize(user):
         "followers": user["followers"]["totalCount"],
         "languages": languages,
         "language_count": len(sizes),
+        "created_at": user["createdAt"],
+        "grid": grid,
+        "week_count": len(calendar["weeks"]),
+        "peak_day": max((c for _, _, c in grid), default=0),
         "weekly": weekly,
         "week_starts": [
             week["contributionDays"][0]["date"] for week in calendar["weeks"]
@@ -400,80 +413,175 @@ def activity_card(theme, s):
     )
 
 
-HEADER_W, HEADER_H = 880, 170
+HEADER_W, HEADER_H = 880, 122
 FOOTER_W, FOOTER_H = 880, 60
+PROFILE_W, PROFILE_H = 880, 214
+ISO_W, ISO_H = 880, 440
 
-TAGLINES = [
-    "full-stack dev from Linz, Austria",
-    "Kotlin | C# | TypeScript | Python",
-    "from Kubernetes to computer vision",
-    "works on my machine. ships in Docker.",
+# The bio. Edit these two columns and push; the workflow redraws the card.
+PROFILE_LEFT = [
+    ("Based in", "Marchtrenk, Upper Austria"),
+    ("Time zone", "CET / CEST, UTC+1"),
+    ("On GitHub since", None),  # filled in from the account creation date
 ]
-
-# Advance width of one character at font-size 1 in the mono stack. Combined
-# with textLength this keeps the caret on the last glyph in any fallback font.
-MONO_ADVANCE = 0.6
+PROFILE_RIGHT = [
+    ("School", "HTBLA Leonding"),
+    ("Focus", "Backend, cloud and containers, computer vision"),
+    ("Offline", "Usually on a tennis court"),
+]
 
 
 def header_card(theme, s):
     t = THEMES[theme]
     dots = ("#ff5f57", "#febc2e", "#28c840")
-    size = 15
-    x_text = 56
-    slot = 100 / len(TAGLINES)
-    cycle = 4.6 * len(TAGLINES)
-
-    frames, phrases = [], []
-    for i, line in enumerate(TAGLINES):
-        width = len(line) * size * MONO_ADVANCE
-        delay = f"{i * 4.6:.1f}s"
-        frames.append(
-            # The keyframe stops are percentages of the whole cycle, so typing
-            # has to finish inside this phrase's quarter of it.
-            f"@keyframes type{i} {{ from {{ transform: translateX(0); }} "
-            f"{slot * 0.4:.1f}%, to {{ transform: translateX({width:.1f}px); }} }}"
-        )
-        phrases.append(
-            f'<g class="phrase" style="animation-delay:{delay}">'
-            f'<text class="typed" x="{x_text}" y="138" textLength="{width:.1f}" '
-            f'lengthAdjust="spacing">{escape(line)}</text>'
-            f'<g class="cover" style="animation-name:type{i};animation-delay:{delay}">'
-            f'<rect x="{x_text}" y="124" width="{width + 40:.1f}" height="20" fill="{t["bg"]}"/>'
-            f'<rect class="caret" x="{x_text}" y="124" width="{size * MONO_ADVANCE:.1f}" '
-            f'height="18" fill="{t["accent"]}" opacity=".85"/>'
-            f"</g></g>"
-        )
-
-    newline = "\n  "
+    circles = "".join(
+        f'<circle cx="{30 + i * 18}" cy="26" r="5.5" fill="{c}" opacity=".9"/>'
+        for i, c in enumerate(dots)
+    )
     body = f"""<style>
-  .tt {{ font-family: {MONO}; font-size: {size}px; }}
+  .tt {{ font-family: {MONO}; font-size: 15px; }}
   .prompt {{ fill: {t['accent']}; font-weight: 700; }}
   .cmd {{ fill: {t['text']}; }}
-  .out {{ fill: {t['muted']}; }}
-  .who {{ fill: {t['text']}; font-weight: 700; }}
+  .who {{ fill: {t['text']}; font-weight: 700; font-size: 19px; }}
   .wtitle {{ font-family: {MONO}; font-size: 11px; fill: {t['muted']}; }}
-  .typed {{ fill: {t['text']}; }}
-  .phrase {{ opacity: 0; animation: slot {cycle:.1f}s steps(1) infinite; }}
-  .cover {{ animation-duration: {cycle:.1f}s; animation-timing-function: linear;
-            animation-iteration-count: infinite; }}
-  .caret {{ animation: blink 1s steps(1) infinite; }}
-  @keyframes slot {{ 0%, {slot - 0.1:.1f}% {{ opacity: 1; }} {slot:.1f}%, 100% {{ opacity: 0; }} }}
-  @keyframes blink {{ 0%, 55% {{ opacity: .85; }} 56%, 100% {{ opacity: 0; }} }}
-  {newline.join(frames)}
-  @media (prefers-reduced-motion: reduce) {{
-    .phrase {{ opacity: 1; animation: none; }}
-    .cover, .caret {{ display: none; }}
-  }}
 </style>
-<g>{''.join(f'<circle cx="{30 + i * 18}" cy="26" r="5.5" fill="{c}" opacity=".9"/>' for i, c in enumerate(dots))}</g>
+<g>{circles}</g>
 <text class="wtitle" x="{HEADER_W / 2}" y="30" text-anchor="middle">{escape(s['login'].lower())} — zsh</text>
 <line class="rule" x1="0" y1="45" x2="{HEADER_W}" y2="45"/>
-<text class="tt" x="30" y="80"><tspan class="prompt">~$</tspan> <tspan class="cmd">whoami</tspan></text>
-<text class="tt" x="30" y="106"><tspan class="who">{escape(s['name'])}</tspan><tspan class="out"> · HTBLA Leonding · backend, cloud, computer vision</tspan></text>
-<text class="tt" x="30" y="138"><tspan class="prompt">~$</tspan></text>
-{''.join(phrases)}"""
-
+<text class="tt" x="30" y="78"><tspan class="prompt">~$</tspan> <tspan class="cmd">whoami</tspan></text>
+<text class="tt who" x="30" y="105">{escape(s['name'])}</text>"""
     return shell(theme, "", "", body, w=HEADER_W, h=HEADER_H, chrome=False)
+
+
+def profile_card(theme, s):
+    since = ""
+    try:
+        since = datetime.date.fromisoformat(s["created_at"][:10]).strftime("%B %Y")
+    except ValueError:
+        pass
+
+    rows = []
+    col_w = (PROFILE_W - 2 * PAD) / 2
+    for c, column in enumerate((PROFILE_LEFT, PROFILE_RIGHT)):
+        for r, (label, value) in enumerate(column):
+            x = PAD + c * col_w
+            y = 86 + r * 46
+            rows.append(
+                f'<g class="in" style="animation-delay:{0.07 * (r * 2 + c) + 0.1:.2f}s">'
+                f'<text class="lab" x="{x:.0f}" y="{y}">{escape(label.upper())}</text>'
+                f'<text class="val" x="{x:.0f}" y="{y + 20}">{escape(value or since)}</text>'
+                f"</g>"
+            )
+    body = (
+        f"<style>.val {{ font-size: 14px; fill: {THEMES[theme]['text']}; }}</style>"
+        + "".join(rows)
+    )
+    return shell(theme, "About me", "", body, w=PROFILE_W, h=PROFILE_H)
+
+
+def shade(hex_color, factor):
+    """Multiply an #rrggbb colour by factor, clamped to the 0-255 range."""
+    r, g, b = (int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+    return "#%02x%02x%02x" % tuple(
+        max(0, min(255, round(channel * factor))) for channel in (r, g, b)
+    )
+
+
+def iso_card(theme, s):
+    """The contribution year as an isometric field of blocks."""
+    t = THEMES[theme]
+    grid = s["grid"]
+    weeks = s["week_count"]
+    peak = s["peak_day"] or 1
+
+    half_w, half_d = 14.0, 4.6   # half width and half depth of one tile
+    max_h = 72.0                 # height of a block on the busiest day
+    # Centre the diamond: col - row runs from -6 to weeks - 1.
+    x0 = ISO_W / 2 - ((weeks - 1) - 6) / 2 * half_w
+
+    def height_of(count):
+        return max(3.0, count / peak * max_h) if count else 0.0
+
+    # Where the field actually starts depends on the data, since an early
+    # quiet week leaves the top of the diamond empty. Measure, then shift.
+    tops = [
+        (col + row) * half_d - height_of(count) - half_d
+        for col, row, count in grid
+    ]
+    y0 = 76.0 - min(tops, default=0.0)
+
+    levels = t["levels"]
+    empty = t["track"]
+
+    blocks = []
+    # Painter's algorithm: smaller col + row sits further back, so it goes first.
+    for col, row, count in sorted(grid, key=lambda g: (g[0] + g[1], g[1])):
+        bx = x0 + (col - row) * half_w
+        by = y0 + (col + row) * half_d
+        if not count:
+            blocks.append(
+                f'<path d="M{bx:.1f} {by - half_d:.1f}l{half_w:.1f} {half_d:.1f}'
+                f'l{-half_w:.1f} {half_d:.1f}l{-half_w:.1f} {-half_d:.1f}z" fill="{empty}"/>'
+            )
+            continue
+
+        height = height_of(count)
+        step = min(int(count / peak * 4) + 1, 4) - 1
+        top = levels[step]
+        ty = by - height
+        delay = (col + row) * 0.011 + 0.15
+        blocks.append(
+            f'<g class="blk" style="animation-delay:{delay:.2f}s">'
+            f'<path d="M{bx:.1f} {ty - half_d:.1f}l{half_w:.1f} {half_d:.1f}'
+            f'l{-half_w:.1f} {half_d:.1f}l{-half_w:.1f} {-half_d:.1f}z" fill="{top}"/>'
+            f'<path d="M{bx - half_w:.1f} {ty:.1f}l{half_w:.1f} {half_d:.1f}'
+            f'v{height:.1f}l{-half_w:.1f} {-half_d:.1f}z" fill="{shade(top, 0.62)}"/>'
+            f'<path d="M{bx:.1f} {ty + half_d:.1f}l{half_w:.1f} {-half_d:.1f}'
+            f'v{height:.1f}l{-half_w:.1f} {half_d:.1f}z" fill="{shade(top, 0.42)}"/>'
+            f"</g>"
+        )
+
+    # Month names ride the front edge, which is the row = 6 diagonal.
+    labels, seen = [], set()
+    for i, iso in enumerate(s["week_starts"]):
+        if iso[:7] in seen:
+            continue
+        seen.add(iso[:7])
+        lx = x0 + (i - 6) * half_w - 13
+        ly = y0 + (i + 6) * half_d + 17
+        if not (6 < lx < ISO_W - PAD and ly < ISO_H - 10):
+            continue
+        labels.append(
+            f'<text class="axis" x="{lx:.0f}" y="{ly:.0f}" text-anchor="middle">'
+            f'{datetime.date.fromisoformat(iso).strftime("%b")}</text>'
+        )
+
+    legend_x = PAD + 34
+    legend_y = ISO_H - 26
+    swatches = "".join(
+        f'<rect x="{legend_x + i * 15}" y="{legend_y}" width="11" height="11" rx="2" fill="{c}"/>'
+        for i, c in enumerate([empty] + list(levels))
+    )
+    body = f"""<style>
+  .blk {{ transform-box: fill-box; transform-origin: 50% 100%;
+          animation: sprout .7s cubic-bezier(.2,.8,.3,1) both; }}
+  @keyframes sprout {{ from {{ transform: scaleY(.02); opacity: 0; }}
+                       to {{ transform: none; opacity: 1; }} }}
+  @media (prefers-reduced-motion: reduce) {{ .blk {{ animation: none; }} }}
+</style>
+{swatches}
+<text class="axis" x="{legend_x - 6}" y="{legend_y + 9}" text-anchor="end">LESS</text>
+<text class="axis" x="{legend_x + 81}" y="{legend_y + 9}" text-anchor="start">MORE</text>
+{''.join(blocks)}
+{''.join(labels)}"""
+    return shell(
+        theme,
+        "Contribution Landscape",
+        f'{human(s["contributions"])} contributions',
+        body,
+        w=ISO_W,
+        h=ISO_H,
+    )
 
 
 def footer_card(theme, s):
@@ -510,13 +618,15 @@ def main():
             (f"activity{suffix}.svg", activity_card(theme, s)),
             (f"header{suffix}.svg", header_card(theme, s)),
             (f"footer{suffix}.svg", footer_card(theme, s)),
+            (f"profile{suffix}.svg", profile_card(theme, s)),
+            (f"iso{suffix}.svg", iso_card(theme, s)),
         ):
             path = os.path.join(out_dir, name)
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(svg)
             print(f"wrote {path}")
 
-    skip = {"languages", "weekly", "week_starts"}
+    skip = {"languages", "weekly", "week_starts", "grid"}
     print(json.dumps({k: v for k, v in s.items() if k not in skip}, indent=2))
 
 
