@@ -8,7 +8,6 @@ Stdlib only, so the workflow needs no install step.
 
 import datetime
 import json
-import math
 import os
 import sys
 import urllib.error
@@ -292,153 +291,6 @@ def language_card(theme, s):
     return shell(theme, "Most Used Languages", "weighted by repo", "\n".join(parts))
 
 
-SIG_W, SIG_H = 880, 450
-RIDGES = 26          # stacked lines, back to front
-PERIOD = 34          # samples in one loop of the waveform
-OVERHANG = 60        # how far the closing edges sit outside the clip
-
-
-def mix(a, b, t):
-    """Blend two #rrggbb colours; t=0 is a, t=1 is b."""
-    ca = [int(a[i : i + 2], 16) for i in (1, 3, 5)]
-    cb = [int(b[i : i + 2], 16) for i in (1, 3, 5)]
-    return "#%02x%02x%02x" % tuple(
-        round(x + (y - x) * t) for x, y in zip(ca, cb)
-    )
-
-
-def ridge_path(profile, x0, step, base, amp, floor):
-    """A seamless Catmull-Rom ridge over two loops of profile, closed downwards.
-
-    The samples are read modulo the period and the tangents reach one sample
-    past each end, so the curve joins itself exactly where the loop restarts.
-    The closing edges are pushed outside the clip, otherwise the stroke would
-    draw them as bright verticals down the sides of the field.
-    """
-    n = len(profile)
-    last = 2 * n
-
-    def pt(i):
-        return x0 + i * step, base - amp * profile[i % n]
-
-    d = ["M%.1f,%.1f" % pt(0)]
-    for i in range(last):
-        (x0_, y0_), (x1_, y1_) = pt(i - 1), pt(i)
-        (x2, y2), (x3, y3) = pt(i + 1), pt(i + 2)
-        d.append(
-            "C%.1f,%.1f %.1f,%.1f %.1f,%.1f"
-            % (
-                x1_ + (x2 - x0_) / 6, y1_ + (y2 - y0_) / 6,
-                x2 - (x3 - x1_) / 6, y2 - (y3 - y1_) / 6,
-                x2, y2,
-            )
-        )
-    end_x = x0 + last * step
-    d.append(
-        "L%.1f,%.1f L%.1f,%.1f Z"
-        % (end_x + OVERHANG, floor, x0 - OVERHANG, floor)
-    )
-    return "".join(d)
-
-
-def signal_card(theme, s):
-    """The contribution year as a drifting ridgeline field.
-
-    Every row is a window of real days, resampled to one loop of PERIOD
-    samples and drawn twice side by side. Each row then slides left by exactly
-    one loop width, so the motion never shows a seam, and the rows run at
-    different speeds to give the stack depth.
-    """
-    t = THEMES[theme]
-    counts = [c for _, _, c in s["grid"]] or [0]
-    peak = max(counts) or 1
-
-    x0, x1 = PAD, SIG_W - PAD
-    span = x1 - x0
-    step = span / PERIOD
-    top, bottom = 88, SIG_H - 64
-    floor = bottom + 90        # below the clip, so the closing edge never shows
-    clip_h = bottom + 12 - 66
-
-    rows = []
-    for r in range(RIDGES):
-        f = r / (RIDGES - 1)                      # 0 = far back, 1 = front
-        base = top + (f ** 1.3) * (bottom - top)  # rows compress into the distance
-        amp = 10 + 36 * f ** 1.25
-
-        # One window of days per row, walked a week at a time through the year.
-        profile = []
-        for i in range(PERIOD):
-            day = counts[(r * 7 + i) % len(counts)] / peak
-            # A slow standing wave keeps quiet stretches from flatlining.
-            wave = 0.5 + 0.5 * math.sin(2 * math.pi * 3 * i / PERIOD + r * 0.7)
-            profile.append(0.78 * day ** 0.7 + 0.22 * wave)
-
-        stroke = mix(t["muted"], t["accent"], f ** 1.1)
-        rows.append(
-            '<path d="{d}" fill="{panel}" stroke="{stroke}" stroke-width="{sw:.2f}" '
-            'stroke-opacity="{op:.2f}" stroke-linejoin="round"{lift} class="ridge" '
-            'style="animation-duration:{dur:.1f}s"/>'.format(
-                d=ridge_path(profile, x0, step, base, amp, floor),
-                panel=t["panel"],
-                stroke=stroke,
-                sw=0.9 + 1.1 * f,
-                op=0.42 + 0.58 * f,
-                lift=' filter="url(#lift)"' if f > 0.74 else "",
-                dur=46 - 30 * f,
-            )
-        )
-
-    return shell(
-        theme,
-        "Signal",
-        f'{human(s["contributions"])} contributions',
-        f"""<defs>
-  <filter id="lift" x="-12%" y="-40%" width="124%" height="200%">
-    <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="{t['accent']}" flood-opacity=".55"/>
-  </filter>
-  <clipPath id="plot"><rect x="{x0}" y="66" width="{span}" height="{clip_h}" rx="9"/></clipPath>
-  <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="{t['accent']}" stop-opacity="0"/>
-    <stop offset="50%" stop-color="{t['accent']}" stop-opacity=".22"/>
-    <stop offset="100%" stop-color="{t['accent']}" stop-opacity="0"/>
-  </linearGradient>
-  <linearGradient id="edgeL" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="{t['panel']}"/>
-    <stop offset="100%" stop-color="{t['panel']}" stop-opacity="0"/>
-  </linearGradient>
-  <linearGradient id="edgeR" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="{t['panel']}" stop-opacity="0"/>
-    <stop offset="100%" stop-color="{t['panel']}"/>
-  </linearGradient>
-</defs>
-<style>
-  .ridge {{ animation-name: drift; animation-timing-function: linear; animation-iteration-count: infinite; }}
-  @keyframes drift {{ from {{ transform: translateX(0); }} to {{ transform: translateX({-span:.1f}px); }} }}
-  .beam {{ animation: sweep 7.5s linear infinite; }}
-  @keyframes sweep {{ from {{ transform: translateX(-220px); }} to {{ transform: translateX({span:.1f}px); }} }}
-  .live {{ animation: pulse 2.4s ease-in-out infinite; }}
-  @keyframes pulse {{ 0%,100% {{ opacity: 1; }} 50% {{ opacity: .25; }} }}
-  .meta {{ font-family: {MONO}; font-size: 10px; fill: {t['muted']}; letter-spacing: 1px; }}
-  @media (prefers-reduced-motion: reduce) {{
-    .ridge, .beam, .live {{ animation: none; }}
-  }}
-</style>
-<rect x="{x0}" y="66" width="{span}" height="{clip_h}" rx="9" fill="{t['panel']}" stroke="{t['border']}"/>
-<g clip-path="url(#plot)">
-{chr(10).join(rows)}
-<rect class="beam" x="{x0}" y="66" width="220" height="{clip_h}" fill="url(#beam)"/>
-</g>
-<rect x="{x0}" y="66" width="30" height="{clip_h}" fill="url(#edgeL)"/>
-<rect x="{x1 - 30}" y="66" width="30" height="{clip_h}" fill="url(#edgeR)"/>
-<text class="meta" x="{x0}" y="{SIG_H - 20}">{s["week_count"]} WEEKS &#183; PEAK {s["peak_day"]}/DAY &#183; {s["longest_streak"]}-DAY STREAK</text>
-<circle class="live" cx="{x1 - 46}" cy="{SIG_H - 24}" r="3" fill="{t['accent']}"/>
-<text class="meta" x="{x1}" y="{SIG_H - 20}" text-anchor="end" fill="{t['accent']}">LIVE</text>""",
-        w=SIG_W,
-        h=SIG_H,
-    )
-
-
 HEADER_W, HEADER_H = 880, 122
 FOOTER_W, FOOTER_H = 880, 60
 PROFILE_W, PROFILE_H = 880, 186
@@ -535,7 +387,6 @@ def main():
         for name, svg in (
             (f"stats{suffix}.svg", stats_card(theme, s)),
             (f"langs{suffix}.svg", language_card(theme, s)),
-            (f"signal{suffix}.svg", signal_card(theme, s)),
             (f"header{suffix}.svg", header_card(theme, s)),
             (f"footer{suffix}.svg", footer_card(theme, s)),
             (f"profile{suffix}.svg", profile_card(theme, s)),

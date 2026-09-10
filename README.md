@@ -85,15 +85,6 @@
   </picture>
 </p>
 
-## 📡 Signal
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/signal-dark.svg" />
-    <img width="810" alt="A drifting ridgeline field driven by a year of commits" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/signal.svg" />
-  </picture>
-</p>
-
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/github-snake-dark.svg" />
@@ -111,7 +102,7 @@ Everything above is regenerated nightly by [one workflow](.github/workflows/snak
 | Asset | Built by |
 | --- | --- |
 | `github-snake.svg`, `github-snake-dark.svg` | [`Platane/snk`](https://github.com/Platane/snk), recoloured to match the palette |
-| `header.svg`, `profile.svg`, `stats.svg`, `langs.svg`, `signal.svg`, `footer.svg` (+ dark variants) | [`profile_cards.py`](.github/scripts/profile_cards.py) against the GitHub GraphQL API |
+| `header.svg`, `profile.svg`, `stats.svg`, `langs.svg`, `footer.svg` (+ dark variants) | [`profile_cards.py`](.github/scripts/profile_cards.py) against the GitHub GraphQL API |
 
 The cards are self-hosted on purpose. The popular public card services keep going down, and a
 paused deployment turns a profile into a wall of broken images. The terminal banner at the top,
@@ -120,11 +111,6 @@ cycling text and all, is a plain SVG with CSS keyframes rather than a call to a 
 Language shares weight every repository equally rather than by byte count, so one large
 generated project cannot swallow the chart.
 
-The signal field stacks 26 ridges, one per window of real days, each resampled to a single
-loop and drawn twice end to end. Every ridge then slides left by exactly one loop width, so
-the motion repeats without a seam, and the rows run at different speeds to fake depth. Each
-ridge is filled with the panel colour, which is what lets the front rows hide the ones behind
-them. It is pure CSS keyframes, no script, and it holds still under `prefers-reduced-motion`.
 
 </details>
 
