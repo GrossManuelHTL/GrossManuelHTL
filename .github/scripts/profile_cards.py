@@ -166,12 +166,27 @@ def human(n):
     return f"{n:,}".replace(",", " ")
 
 
-def shell(theme, title, note, body, w=None, h=None):
+def shell(theme, title, note, body, w=None, h=None, chrome=True, frame=True):
     t = THEMES[theme]
     w = w or W
     h = h or H
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" aria-label="{escape(title)}">
-<title>{escape(title)}</title>
+    label = title or "profile banner"
+    plate = (
+        f'<rect class="card" x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="12"/>'
+        f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="12" fill="url(#glow)"/>'
+        if frame
+        else f'<rect width="{w}" height="{h}" fill="{t["bg"]}"/>'
+    )
+    heading = (
+        f'<rect x="{PAD}" y="26" width="3" height="14" rx="1.5" fill="{t["accent"]}"/>'
+        f'<text class="h" x="{PAD + 12}" y="38">{escape(title)}</text>'
+        f'<text class="note" x="{w - PAD}" y="37" text-anchor="end">{escape(note)}</text>'
+        f'<line class="rule" x1="{PAD}" y1="54" x2="{w - PAD}" y2="54"/>'
+        if chrome
+        else ""
+    )
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" aria-label="{escape(label)}">
+<title>{escape(label)}</title>
 <defs>
   <radialGradient id="glow" cx="100%" cy="0%" r="85%">
     <stop offset="0%" stop-color="{t['accent']}" stop-opacity="{t['glow']}"/>
@@ -202,12 +217,8 @@ def shell(theme, title, note, body, w=None, h=None):
   @keyframes grow {{ from {{ transform: scaleX(0); }} to {{ transform: scaleX(1); }} }}
   @media (prefers-reduced-motion: reduce) {{ .in, .bar, .spark, .fill {{ animation: none; }} }}
 </style>
-<rect class="card" x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="12"/>
-<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="12" fill="url(#glow)"/>
-<rect x="{PAD}" y="26" width="3" height="14" rx="1.5" fill="{t['accent']}"/>
-<text class="h" x="{PAD + 12}" y="38">{escape(title)}</text>
-<text class="note" x="{w - PAD}" y="37" text-anchor="end">{escape(note)}</text>
-<line class="rule" x1="{PAD}" y1="54" x2="{w - PAD}" y2="54"/>
+{plate}
+{heading}
 {body}
 </svg>
 """
@@ -389,6 +400,98 @@ def activity_card(theme, s):
     )
 
 
+HEADER_W, HEADER_H = 880, 170
+FOOTER_W, FOOTER_H = 880, 60
+
+TAGLINES = [
+    "full-stack dev from Linz, Austria",
+    "Kotlin | C# | TypeScript | Python",
+    "from Kubernetes to computer vision",
+    "works on my machine. ships in Docker.",
+]
+
+# Advance width of one character at font-size 1 in the mono stack. Combined
+# with textLength this keeps the caret on the last glyph in any fallback font.
+MONO_ADVANCE = 0.6
+
+
+def header_card(theme, s):
+    t = THEMES[theme]
+    dots = ("#ff5f57", "#febc2e", "#28c840")
+    size = 15
+    x_text = 56
+    slot = 100 / len(TAGLINES)
+    cycle = 4.6 * len(TAGLINES)
+
+    frames, phrases = [], []
+    for i, line in enumerate(TAGLINES):
+        width = len(line) * size * MONO_ADVANCE
+        delay = f"{i * 4.6:.1f}s"
+        frames.append(
+            # The keyframe stops are percentages of the whole cycle, so typing
+            # has to finish inside this phrase's quarter of it.
+            f"@keyframes type{i} {{ from {{ transform: translateX(0); }} "
+            f"{slot * 0.4:.1f}%, to {{ transform: translateX({width:.1f}px); }} }}"
+        )
+        phrases.append(
+            f'<g class="phrase" style="animation-delay:{delay}">'
+            f'<text class="typed" x="{x_text}" y="138" textLength="{width:.1f}" '
+            f'lengthAdjust="spacing">{escape(line)}</text>'
+            f'<g class="cover" style="animation-name:type{i};animation-delay:{delay}">'
+            f'<rect x="{x_text}" y="124" width="{width + 40:.1f}" height="20" fill="{t["bg"]}"/>'
+            f'<rect class="caret" x="{x_text}" y="124" width="{size * MONO_ADVANCE:.1f}" '
+            f'height="18" fill="{t["accent"]}" opacity=".85"/>'
+            f"</g></g>"
+        )
+
+    newline = "\n  "
+    body = f"""<style>
+  .tt {{ font-family: {MONO}; font-size: {size}px; }}
+  .prompt {{ fill: {t['accent']}; font-weight: 700; }}
+  .cmd {{ fill: {t['text']}; }}
+  .out {{ fill: {t['muted']}; }}
+  .who {{ fill: {t['text']}; font-weight: 700; }}
+  .wtitle {{ font-family: {MONO}; font-size: 11px; fill: {t['muted']}; }}
+  .typed {{ fill: {t['text']}; }}
+  .phrase {{ opacity: 0; animation: slot {cycle:.1f}s steps(1) infinite; }}
+  .cover {{ animation-duration: {cycle:.1f}s; animation-timing-function: linear;
+            animation-iteration-count: infinite; }}
+  .caret {{ animation: blink 1s steps(1) infinite; }}
+  @keyframes slot {{ 0%, {slot - 0.1:.1f}% {{ opacity: 1; }} {slot:.1f}%, 100% {{ opacity: 0; }} }}
+  @keyframes blink {{ 0%, 55% {{ opacity: .85; }} 56%, 100% {{ opacity: 0; }} }}
+  {newline.join(frames)}
+  @media (prefers-reduced-motion: reduce) {{
+    .phrase {{ opacity: 1; animation: none; }}
+    .cover, .caret {{ display: none; }}
+  }}
+</style>
+<g>{''.join(f'<circle cx="{30 + i * 18}" cy="26" r="5.5" fill="{c}" opacity=".9"/>' for i, c in enumerate(dots))}</g>
+<text class="wtitle" x="{HEADER_W / 2}" y="30" text-anchor="middle">{escape(s['login'].lower())} — zsh</text>
+<line class="rule" x1="0" y1="45" x2="{HEADER_W}" y2="45"/>
+<text class="tt" x="30" y="80"><tspan class="prompt">~$</tspan> <tspan class="cmd">whoami</tspan></text>
+<text class="tt" x="30" y="106"><tspan class="who">{escape(s['name'])}</tspan><tspan class="out"> · HTBLA Leonding · backend, cloud, computer vision</tspan></text>
+<text class="tt" x="30" y="138"><tspan class="prompt">~$</tspan></text>
+{''.join(phrases)}"""
+
+    return shell(theme, "", "", body, w=HEADER_W, h=HEADER_H, chrome=False)
+
+
+def footer_card(theme, s):
+    t = THEMES[theme]
+    body = f"""<defs>
+  <linearGradient id="rule" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="{t['accent']}" stop-opacity="0"/>
+    <stop offset="50%" stop-color="{t['accent']}" stop-opacity=".8"/>
+    <stop offset="100%" stop-color="{t['accent']}" stop-opacity="0"/>
+  </linearGradient>
+</defs>
+<rect x="0" y="18" width="{FOOTER_W}" height="2" fill="url(#rule)"/>
+<text class="foot" x="{FOOTER_W / 2}" y="46" text-anchor="middle">
+  Every image on this page is regenerated nightly by a workflow in this repo.
+</text>"""
+    return shell(theme, "", "", body, w=FOOTER_W, h=FOOTER_H, chrome=False, frame=False)
+
+
 def main():
     out_dir = sys.argv[1] if len(sys.argv) > 1 else "dist"
     login = os.environ.get("GH_USER") or "GrossManuelHTL"
@@ -405,6 +508,8 @@ def main():
             (f"stats{suffix}.svg", stats_card(theme, s)),
             (f"langs{suffix}.svg", language_card(theme, s)),
             (f"activity{suffix}.svg", activity_card(theme, s)),
+            (f"header{suffix}.svg", header_card(theme, s)),
+            (f"footer{suffix}.svg", footer_card(theme, s)),
         ):
             path = os.path.join(out_dir, name)
             with open(path, "w", encoding="utf-8") as fh:
