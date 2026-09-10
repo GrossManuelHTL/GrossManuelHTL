@@ -356,6 +356,142 @@ def profile_card(theme, s):
     return shell(theme, "About me", "", body, w=PROFILE_W, h=PROFILE_H, chrome=False)
 
 
+def mix(a, b, t):
+    """Blend two #rrggbb colours; t=0 is a, t=1 is b."""
+    ca = [int(a[i : i + 2], 16) for i in (1, 3, 5)]
+    cb = [int(b[i : i + 2], 16) for i in (1, 3, 5)]
+    return "#%02x%02x%02x" % tuple(round(x + (y - x) * t) for x, y in zip(ca, cb))
+
+
+BUG_W, BUG_H = 880, 36
+BUG_CYCLE = 14.0     # seconds for one full pass, including the wait offscreen
+BUG_STEP = 0.42      # seconds per leg swing
+GROUND = 23          # y of the rule the beetle walks on
+
+# Fractions of the cycle: enter, stop to groom, carry on, wait offscreen.
+BUG_MARKS = (0.03, 0.38, 0.50, 0.93)
+BUG_FROM, BUG_MID, BUG_TO = -34, 424, 918
+
+
+def bug_frames(pose):
+    """Keyframe stops for one leg group, sampled at every leg swing.
+
+    pose(t, walking) returns the angle in degrees at time t, so the walking
+    legs and the one that lifts during the pause can share this generator.
+    """
+    stop_a, stop_b = BUG_MARKS[1] * BUG_CYCLE, BUG_MARKS[2] * BUG_CYCLE
+    steps = int(BUG_CYCLE / BUG_STEP) + 1
+    out, seen = [], set()
+    for i in range(steps + 1):
+        t = min(i * BUG_STEP, BUG_CYCLE)
+        pct = round(100 * t / BUG_CYCLE, 2)
+        if pct in seen:
+            continue
+        seen.add(pct)
+        out.append(f"{pct:g}%{{transform:rotate({pose(t, not stop_a <= t < stop_b):.1f}deg)}}")
+    return "".join(out)
+
+
+def bug_card(theme):
+    """A beetle walking the rule under the banner. A bug in the README."""
+    t = THEMES[theme]
+    body_dark = mix(t["accent"], "#000000", 0.45 if theme == "dark" else 0.25)
+    limb = mix(t["muted"], t["text"], 0.35)
+
+    # Tripod gait: three legs swing forward while the other three push back.
+    def swing(phase):
+        def pose(time, walking):
+            if not walking:
+                return 0.0
+            return 13.0 if int(time / BUG_STEP) % 2 == phase else -13.0
+        return pose
+
+    def groom(time, walking):
+        """The front right leg, which sweeps the antenna during the stop."""
+        if walking:
+            return swing(1)(time, True)
+        rel = (time - BUG_MARKS[1] * BUG_CYCLE) / BUG_STEP
+        return -46.0 if int(rel) % 2 else -30.0
+
+    legs = []
+    joints = ((-4.6, "back"), (0.4, "mid"), (5.2, "front"))
+    for side in (-1, 1):                      # -1 is the far side, drawn first
+        for i, (jx, kind) in enumerate(joints):
+            # Feet land on the rule, so the beetle stands on the line rather
+            # than straddling it.
+            reach = {"back": (-4.6, 5.7), "mid": (-0.8, 5.9), "front": (4.8, 5.6)}[kind]
+            group = "a" if (i + (side < 0)) % 2 else "b"
+            if side > 0 and kind == "front":
+                group = "g"
+            legs.append(
+                f'<g transform="translate({jx:.1f},-5.4)">'
+                f'<g class="leg {group}">'
+                f'<path d="M0,0 L{reach[0] * 0.5:.1f},{reach[1] * 0.55:.1f} '
+                f'L{reach[0]:.1f},{reach[1]:.1f}" fill="none" stroke="{limb}" '
+                f'stroke-width="{1.5 if side > 0 else 1.1:.1f}" stroke-linecap="round" '
+                f'stroke-linejoin="round" opacity="{1 if side > 0 else .55:g}"/>'
+                f"</g></g>"
+            )
+
+    beetle = f"""<g class="bob">
+{chr(10).join(legs)}
+<ellipse cx="-0.4" cy="-8.6" rx="8.2" ry="5.3" fill="url(#shell)"/>
+<path d="M-8.4,-8.2 A8.2,5.3 0 0 0 6.4,-6.2" fill="none" stroke="{body_dark}" stroke-width="1" stroke-opacity=".7"/>
+<path d="M-7.2,-10.4 A8.2,5.3 0 0 1 0.8,-13.7" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-opacity=".38" stroke-linecap="round"/>
+<ellipse cx="6.4" cy="-10" rx="3.8" ry="3.6" fill="{body_dark}"/>
+<circle cx="10.2" cy="-10.8" r="2.5" fill="{body_dark}"/>
+<g class="feel">
+  <path d="M11.5,-12.3 q2.6,-1 3.6,-2.9" fill="none" stroke="{limb}" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M11.8,-9.8 q3,-0.3 4.2,-1.7" fill="none" stroke="{limb}" stroke-width="1.1" stroke-linecap="round"/>
+</g>
+</g>"""
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{BUG_W}" height="{BUG_H}" viewBox="0 0 {BUG_W} {BUG_H}" role="img" aria-label="a beetle walking along a divider">
+<title>a beetle walking along a divider</title>
+<defs>
+  <linearGradient id="rule" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="{t['accent']}" stop-opacity="0"/>
+    <stop offset="50%" stop-color="{t['accent']}" stop-opacity=".7"/>
+    <stop offset="100%" stop-color="{t['accent']}" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="shell" cx="34%" cy="26%" r="78%">
+    <stop offset="0%" stop-color="{mix(t['accent'], '#ffffff', .35)}"/>
+    <stop offset="62%" stop-color="{t['accent']}"/>
+    <stop offset="100%" stop-color="{body_dark}"/>
+  </radialGradient>
+</defs>
+<style>
+  .walk {{ animation: walk {BUG_CYCLE:g}s linear infinite; }}
+  @keyframes walk {{
+    0%,{BUG_MARKS[0] * 100:g}% {{ transform: translateX({BUG_FROM}px); }}
+    {BUG_MARKS[1] * 100:g}%,{BUG_MARKS[2] * 100:g}% {{ transform: translateX({BUG_MID}px); }}
+    {BUG_MARKS[3] * 100:g}%,100% {{ transform: translateX({BUG_TO}px); }}
+  }}
+  .bob {{ animation: bob {BUG_STEP * 2:g}s ease-in-out infinite; }}
+  @keyframes bob {{ 0%,100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-.7px); }} }}
+  .feel {{ animation: feel 1.1s ease-in-out infinite; transform-origin: 12px -11px; }}
+  @keyframes feel {{ 0%,100% {{ transform: rotate(-5deg); }} 50% {{ transform: rotate(6deg); }} }}
+  .leg {{ animation-duration: {BUG_CYCLE:g}s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }}
+  .a {{ animation-name: gaitA; }}
+  .b {{ animation-name: gaitB; }}
+  .g {{ animation-name: gaitG; }}
+  @keyframes gaitA {{ {bug_frames(swing(0))} }}
+  @keyframes gaitB {{ {bug_frames(swing(1))} }}
+  @keyframes gaitG {{ {bug_frames(groom)} }}
+  @media (prefers-reduced-motion: reduce) {{
+    .walk, .bob, .feel, .leg {{ animation: none; }}
+    .walk {{ transform: translateX({BUG_MID}px); }}
+  }}
+</style>
+<rect x="0" y="{GROUND - 1}" width="{BUG_W}" height="2" fill="url(#rule)"/>
+<g transform="translate(0,{GROUND})">
+  <g class="walk">
+{beetle}
+  </g>
+</g>
+</svg>
+"""
+
 def footer_card(theme, s):
     t = THEMES[theme]
     body = f"""<defs>
@@ -389,6 +525,7 @@ def main():
             (f"langs{suffix}.svg", language_card(theme, s)),
             (f"header{suffix}.svg", header_card(theme, s)),
             (f"footer{suffix}.svg", footer_card(theme, s)),
+            (f"bug{suffix}.svg", bug_card(theme)),
             (f"profile{suffix}.svg", profile_card(theme, s)),
         ):
             path = os.path.join(out_dir, name)

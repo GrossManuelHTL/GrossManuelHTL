@@ -12,7 +12,12 @@
 
 </div>
 
----
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/bug-dark.svg" />
+    <img width="810" alt="a beetle walking along the divider" src="https://raw.githubusercontent.com/GrossManuelHTL/GrossManuelHTL/output/bug.svg" />
+  </picture>
+</p>
 
 ## 👋 About me
 
@@ -102,7 +107,7 @@ Everything above is regenerated nightly by [one workflow](.github/workflows/snak
 | Asset | Built by |
 | --- | --- |
 | `github-snake.svg`, `github-snake-dark.svg` | [`Platane/snk`](https://github.com/Platane/snk), recoloured to match the palette |
-| `header.svg`, `profile.svg`, `stats.svg`, `langs.svg`, `footer.svg` (+ dark variants) | [`profile_cards.py`](.github/scripts/profile_cards.py) against the GitHub GraphQL API |
+| `header.svg`, `profile.svg`, `stats.svg`, `langs.svg`, `bug.svg`, `footer.svg` (+ dark variants) | [`profile_cards.py`](.github/scripts/profile_cards.py) against the GitHub GraphQL API |
 
 The cards are self-hosted on purpose. The popular public card services keep going down, and a
 paused deployment turns a profile into a wall of broken images. The terminal banner at the top,
@@ -110,6 +115,10 @@ cycling text and all, is a plain SVG with CSS keyframes rather than a call to a 
 
 Language shares weight every repository equally rather than by byte count, so one large
 generated project cannot swallow the chart.
+
+The divider under the banner has a beetle walking along it, because a page about writing
+software should have exactly one bug in it. Its six legs run on a tripod gait, it stops
+halfway to clean an antenna, and the whole thing is CSS keyframes generated from Python.
 
 
 </details>
