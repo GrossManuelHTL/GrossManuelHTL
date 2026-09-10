@@ -1,29 +1,68 @@
-name: Generate snake
+name: Profile assets
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    # Off the hour: GitHub's scheduler is heavily contended at :00.
+    - cron: "37 3 * * *"
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - ".github/workflows/snake.yml"
+      - ".github/scripts/**"
 
 permissions:
   contents: write
 
+concurrency:
+  group: profile-assets
+  cancel-in-progress: true
+
 jobs:
-  generate:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: Platane/snk@v3
+      - uses: actions/checkout@v7
+
+      # Start from the last published assets, so one failing generator
+      # cannot blank out an image the README already points at.
+      - name: Restore previously published assets
+        run: |
+          if git clone --depth 1 --branch output \
+              "https://github.com/${GITHUB_REPOSITORY}.git" dist 2>/dev/null; then
+            rm -rf dist/.git
+          else
+            mkdir -p dist
+          fi
+
+      - name: Generate contribution snake
+        uses: Platane/snk@v3
         with:
           github_user_name: ${{ github.repository_owner }}
+          # '#' has to be percent-encoded, otherwise everything after it is
+          # read as a URL fragment and the colour is silently dropped.
           outputs: |
-            dist/github-snake.svg
-            dist/github-snake-dark.svg?palette=github-dark&color_snake=#00e0b8
+            dist/github-snake.svg?color_snake=%23009e86&color_dots=%23ebedf0,%23b6f0e4,%236fdcc6,%2318b89b,%23009e86
+            dist/github-snake-dark.svg?palette=github-dark&color_snake=%2300e0b8&color_dots=%23161b22,%23064e43,%230b8f7a,%2312c9aa,%2300e0b8
 
-      - uses: crazy-max/ghaction-github-pages@v4
-        with:
-          target_branch: output
-          build_dir: dist
+      - name: Generate stat cards
+        continue-on-error: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # STATS_TOKEN (a classic PAT with repo + read:user) also counts
+          # private work; without it the cards show public activity only.
+          GH_TOKEN: ${{ secrets.STATS_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_USER: ${{ github.repository_owner }}
+        run: python3 .github/scripts/profile_cards.py dist
+
+      - name: Publish to output branch
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist
+          git init -q -b output
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "chore: regenerate profile assets"
+          git push -q --force \
+            "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" output
