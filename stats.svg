@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="200" viewBox="0 0 450 200" role="img" aria-label="GitHub Stats">
+<title>GitHub Stats</title>
+<defs>
+  <radialGradient id="glow" cx="100%" cy="0%" r="85%">
+    <stop offset="0%" stop-color="#00a98c" stop-opacity="0.09"/>
+    <stop offset="100%" stop-color="#00a98c" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<style>
+  .card { fill: #ffffff; stroke: #d8dee4; }
+  text { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif; }
+  .h { font-size: 15px; font-weight: 600; fill: #1f2328; }
+  .note { font-size: 10.5px; fill: #59636e; letter-spacing: .8px; text-transform: uppercase; }
+  .num { font-family: 'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Consolas,monospace; font-size: 21px; font-weight: 700; fill: #00a98c; }
+  .lab { font-size: 10px; fill: #59636e; letter-spacing: .9px; text-transform: uppercase; }
+  .lang { font-size: 12.5px; fill: #1f2328; }
+  .pct { font-family: 'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Consolas,monospace; font-size: 11.5px; fill: #59636e; }
+  .rule { stroke: #d8dee4; }
+  .grid { stroke: #d8dee4; stroke-dasharray: 2 4; }
+  .axis { font-size: 9.5px; fill: #59636e; letter-spacing: .5px; }
+  .foot { font-size: 11.5px; fill: #59636e; }
+  .footv { font-size: 11.5px; font-weight: 600; fill: #00a98c; }
+  .sep { fill: #d8dee4; }
+  .peak { font-family: 'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Consolas,monospace; font-size: 10px; font-weight: 700; fill: #00a98c; }
+  .spark { stroke-dasharray: 4000; animation: draw 2.2s ease-out both; }
+  @keyframes draw { from { stroke-dashoffset: 4000; } to { stroke-dashoffset: 0; } }
+  .in { animation: rise .55s cubic-bezier(.2,.7,.3,1) both; }
+  .bar { transform-box: fill-box; transform-origin: left center; animation: grow .9s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: reduce) { .in, .bar, .spark, .fill { animation: none; } }
+</style>
+<rect class="card" x=".5" y=".5" width="449" height="199" rx="12"/><rect x=".5" y=".5" width="449" height="199" rx="12" fill="url(#glow)"/>
+<rect x="22" y="26" width="3" height="14" rx="1.5" fill="#00a98c"/><text class="h" x="34" y="38">GitHub Stats</text><text class="note" x="428" y="37" text-anchor="end">last 12 months</text><line class="rule" x1="22" y1="54" x2="428" y2="54"/>
+<g class="in" style="animation-delay:0.10s"><text class="num" x="22.0" y="102">407</text><text class="lab" x="22.0" y="119">CONTRIBUTIONS</text></g>
+<g class="in" style="animation-delay:0.16s"><text class="num" x="157.3" y="102">380</text><text class="lab" x="157.3" y="119">COMMITS</text></g>
+<g class="in" style="animation-delay:0.22s"><text class="num" x="292.7" y="102">24</text><text class="lab" x="292.7" y="119">REPOSITORIES</text></g>
+<g class="in" style="animation-delay:0.28s"><text class="num" x="22.0" y="160">14</text><text class="lab" x="22.0" y="177">PULL REQUESTS</text></g>
+<g class="in" style="animation-delay:0.34s"><text class="num" x="157.3" y="160">27</text><text class="lab" x="157.3" y="177">ISSUES</text></g>
+<g class="in" style="animation-delay:0.40s"><text class="num" x="292.7" y="160">7</text><text class="lab" x="292.7" y="177">LANGUAGES</text></g>
+</svg>
