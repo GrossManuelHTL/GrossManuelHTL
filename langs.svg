@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="200" viewBox="0 0 450 200" role="img" aria-label="Most Used Languages">
+<title>Most Used Languages</title>
+<defs>
+  <radialGradient id="glow" cx="100%" cy="0%" r="85%">
+    <stop offset="0%" stop-color="#00a98c" stop-opacity="0.09"/>
+    <stop offset="100%" stop-color="#00a98c" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<style>
+  .card { fill: #ffffff; stroke: #d8dee4; }
+  text { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif; }
+  .h { font-size: 15px; font-weight: 600; fill: #1f2328; }
+  .note { font-size: 10.5px; fill: #59636e; letter-spacing: .8px; text-transform: uppercase; }
+  .num { font-family: 'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Consolas,monospace; font-size: 21px; font-weight: 700; fill: #00a98c; }
+  .lab { font-size: 10px; fill: #59636e; letter-spacing: .9px; text-transform: uppercase; }
+  .lang { font-size: 12.5px; fill: #1f2328; }
+  .pct { font-family: 'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Consolas,monospace; font-size: 11.5px; fill: #59636e; }
+  .rule { stroke: #d8dee4; }
+  .grid { stroke: #d8dee4; stroke-dasharray: 2 4; }
+  .axis { font-size: 9.5px; fill: #59636e; letter-spacing: .5px; }
+  .foot { font-size: 11.5px; fill: #59636e; }
+  .footv { font-size: 11.5px; font-weight: 600; fill: #00a98c; }
+  .sep { fill: #d8dee4; }
+  .peak { font-family: 'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Consolas,monospace; font-size: 10px; font-weight: 700; fill: #00a98c; }
+  .spark { stroke-dasharray: 4000; animation: draw 2.2s ease-out both; }
+  @keyframes draw { from { stroke-dashoffset: 4000; } to { stroke-dashoffset: 0; } }
+  .in { animation: rise .55s cubic-bezier(.2,.7,.3,1) both; }
+  .bar { transform-box: fill-box; transform-origin: left center; animation: grow .9s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: reduce) { .in, .bar, .spark, .fill { animation: none; } }
+</style>
+<rect class="card" x=".5" y=".5" width="449" height="199" rx="12"/><rect x=".5" y=".5" width="449" height="199" rx="12" fill="url(#glow)"/>
+<rect x="22" y="26" width="3" height="14" rx="1.5" fill="#00a98c"/><text class="h" x="34" y="38">Most Used Languages</text><text class="note" x="428" y="37" text-anchor="end">weighted by repo</text><line class="rule" x1="22" y1="54" x2="428" y2="54"/>
+<rect x="22" y="72" width="406" height="11" rx="5.5" fill="#e6eaef"/>
+<g clip-path="inset(0 round 5.5px)" transform="translate(0,0)">
+<g class="bar" style="animation-delay:.1s">
+<rect x="22.00" y="72" width="178.38" height="11" fill="#7355dd"/>
+<rect x="200.38" y="72" width="72.96" height="11" fill="#f1e05a"/>
+<rect x="273.34" y="72" width="59.41" height="11" fill="#3178c6"/>
+<rect x="332.75" y="72" width="47.79" height="11" fill="#74283c"/>
+<rect x="380.54" y="72" width="26.93" height="11" fill="#b07219"/>
+<rect x="407.47" y="72" width="20.53" height="11" fill="#41b883"/>
+</g></g>
+<g class="in" style="animation-delay:0.25s"><circle cx="27.0" cy="114" r="5" fill="#7355dd"/><text class="lang" x="39.0" y="118">C#</text><text class="pct" x="213.0" y="118" text-anchor="end">43.9%</text></g>
+<g class="in" style="animation-delay:0.31s"><circle cx="230.0" cy="114" r="5" fill="#f1e05a"/><text class="lang" x="242.0" y="118">JavaScript</text><text class="pct" x="416.0" y="118" text-anchor="end">18.0%</text></g>
+<g class="in" style="animation-delay:0.37s"><circle cx="27.0" cy="140" r="5" fill="#3178c6"/><text class="lang" x="39.0" y="144">TypeScript</text><text class="pct" x="213.0" y="144" text-anchor="end">14.6%</text></g>
+<g class="in" style="animation-delay:0.43s"><circle cx="230.0" cy="140" r="5" fill="#74283c"/><text class="lang" x="242.0" y="144">Prolog</text><text class="pct" x="416.0" y="144" text-anchor="end">11.8%</text></g>
+<g class="in" style="animation-delay:0.49s"><circle cx="27.0" cy="166" r="5" fill="#b07219"/><text class="lang" x="39.0" y="170">Java</text><text class="pct" x="213.0" y="170" text-anchor="end">6.6%</text></g>
+<g class="in" style="animation-delay:0.55s"><circle cx="230.0" cy="166" r="5" fill="#41b883"/><text class="lang" x="242.0" y="170">Vue</text><text class="pct" x="416.0" y="170" text-anchor="end">5.1%</text></g>
+</svg>
